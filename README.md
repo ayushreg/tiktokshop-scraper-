@@ -1,142 +1,114 @@
-<a id="readme-top"></a>
 
-<!-- PROJECT SHIELDS -->
-
-[][license-url]
-
-<!-- PROJECT LOGO -->
-
-<br />
 <div align="center">
-<img src="images/logo.png" alt="Logo" width="80" height="80">
-
-<h3 align="center">AI-Powered Marketplace Listing Generator</h3>
-
-<p align="center">
-A smart script that uses Selenium and the Google Gemini API to automatically create perfect Facebook Marketplace listings from a simple product URL.
-<br />
-<br />
-<a href="https://github.com/github_username/repo_name"><strong>Explore the docs »</strong></a>
-<br />
-<br />
-<a href="https://github.com/github_username/repo_name/issues/new?labels=bug&template=bug-report---.md">Report Bug</a>
-&middot;
-<a href="https://github.com/github_username/repo_name/issues/new?labels=enhancement&template=feature-request---.md">Request Feature</a>
-</p>
+  <h1>AI-Powered Marketplace Listing Generator</h1>
+  <p>
+    A smart Python script that uses Selenium and the Google Gemini API to automatically create catchy Facebook Marketplace listings from a product URL.
+  </p>
 </div>
 
-<!-- TABLE OF CONTENTS -->
+---
 
-<details>
-<summary>Table of Contents</summary>
-<ol>
-<li>
-<a href="#about-the-project">About The Project</a>
-<ul>
-<li><a href="#built-with">Built With</a></li>
-</ul>
-</li>
-<li>
-<a href="#getting-started">Getting Started</a>
-<ul>
-<li><a href="#prerequisites">Prerequisites</a></li>
-<li><a href="#installation">Installation</a></li>
-</ul>
-</li>
-<li><a href="#usage">Usage</a></li>
-<li><a href="#roadmap">Roadmap</a></li>
-<li><a href="#license">License</a></li>
-<li><a href="#contact">Contact</a></li>
-</ol>
-</details>
+## Description
 
-<!-- ABOUT THE PROJECT -->
+This project automates the creation of professional product listings for Facebook Marketplace. It combines:
 
-About The Project
-Here's a blank template to get started. To avoid retyping too much info, do a search and replace with your text editor for the following: github_username, repo_name, twitter_handle, linkedin_username, email_client, email, project_title, project_description, project_license
+- **Web scraping with Selenium** to gather product details (title, price, description, images).  
+- **AI-powered text generation with Google Gemini API** to create a ready-to-post, persuasive listing.  
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+> ⚠️ **Note:** This script runs **locally only**. It requires Chrome, ChromeDriver, Python, and internet access to TikTok Shop and Google Gemini API.
 
-Built With
-Python
+---
 
-Selenium
+## Features
 
-Google Gemini API
+- Extract product **title**, **price**, **description**, and **images** from TikTok Shop.  
+- Generate **catchy, concise, and ready-to-post listings**.  
+- Minimal setup for local execution.  
+- Designed for future expansion into a web application.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+---
 
-<!-- GETTING STARTED -->
+## Local Setup
 
-Getting Started
-This is a simple example of how to get the project up and running locally.
+### Prerequisites
 
-Prerequisites
-You need the following installed:
+- Python 3.x installed ([Download Python](https://www.python.org/downloads/))  
+- Google Chrome browser installed ([Download Chrome](https://www.google.com/chrome/))  
+- ChromeDriver that matches your Chrome version ([Download ChromeDriver](https://sites.google.com/chromium.org/driver/))  
+- Google Gemini API key  
 
-Python 3.x
+### Installation Steps
 
-Google Chrome browser
+1. **Clone the repository:**
 
-Your own Gemini API Key
+```bash
+git clone https://github.com/your-username/your-repo-name.git
+cd your-repo-name
+````
 
-Installation
-Clone the repo
+2. **Install required Python libraries:**
 
-git clone https://github.com/github_username/repo_name.git
-
-Install the required Python libraries
-
+```bash
 pip install selenium
 pip install google-generativeai
+```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+3. **Set up ChromeDriver:**
 
-<!-- USAGE EXAMPLES -->
+* Check your Chrome version: `chrome://settings/help`
+* Download the matching ChromeDriver.
+* Place it in your project folder or add it to your system PATH.
 
-Usage
-To use the script, navigate to the project directory in your terminal and run the script with the following command:
+4. **Configure API key:**
 
+Open `main.py` and replace the placeholder API key with your own:
+
+```python
+client = genai.Client(api_key="YOUR_API_KEY")
+```
+
+### Running the Script
+
+```bash
 python main.py
+```
 
-The script will prompt you to enter a product link. Paste the URL and the script will handle the rest, outputting a formatted Facebook Marketplace listing to your console.
+1. Enter a **TikTok Shop product link** when prompted.
+2. The script will output:
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+* Product title
+* Product price
+* Product description
+* Image URLs
+* Formatted Facebook Marketplace listing
 
-<!-- ROADMAP -->
+---
 
-Roadmap
-Add support for more e-commerce websites (Amazon, eBay, etc.).
+## Limitations
 
-Implement better error handling for products that are out of stock or have missing information.
+* Only works **locally** on machines with Chrome and ChromeDriver installed.
+* Requires **internet access** to access TikTok Shop and Google Gemini API.
+* Does **not currently support bulk scraping** or other e-commerce websites.
 
-Create a simple graphical user interface (GUI) to make the tool even more user-friendly.
+---
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+## Roadmap
 
-<!-- LICENSE -->
+* Add support for more e-commerce platforms (Amazon, eBay, etc.)
+* Implement better error handling for out-of-stock products or missing data
+* Create a simple GUI for easier use
+* Explore a web-based version to run in a browser without local setup
 
-License
-Distributed under the MIT License. See LICENSE.txt for more information.
+---
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+## Contributing
 
-<!-- CONTACT -->
+Contributions are welcome! Open an issue or submit a pull request if you want to help improve this project.
 
-Contact
-Your Name - @twitter_handle - email@email_client.com
+---
 
-Project Link: https://github.com/github_username/repo_name
+## License
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+This project is licensed under the MIT License.
 
-<!-- MARKDOWN LINKS & IMAGES -->
-
-[]: #
-[license-url]: https://www.google.com/search?q=%5Bhttps://github.com/github_username/repo_name/blob/main/LICENSE.txt%5Dhttps://github.com/github 
-u
-​
- sername/repo 
-n
-​
- ame/blob/main/LICENSE.txt
+```
