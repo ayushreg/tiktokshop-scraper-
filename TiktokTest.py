@@ -106,21 +106,29 @@ def formatInformation(title, price, description, images):
 
 # Main program
 
-# Get product link from the user
-productLink = input("Enter product link: ")
-driver.get(productLink)
-driver.refresh()           # Reload the page just in case to bypass anomalies
-time.sleep(1)
+# Get multiple product links from the user (comma-separated)
+productLinks = input("Enter product links (separate with commas): ").split(',')
 
-# Call the functions and store results
-title = getTitle()
-price = getPrice()
-images = getImage()
-description = getDescription()
+for productLink in productLinks:
+    productLink = productLink.strip()  # Remove extra spaces
+    if not productLink:
+        continue  # Skip empty inputs
 
-# Pass the scraped info into Gemini
-info = formatInformation(title, price, description, images)
+    print(f"\nProcessing: {productLink}\n")
+    driver.get(productLink)
+    driver.refresh()  # Reload page to bypass anomalies
+    time.sleep(1)
 
-# Print the formatted listing
-print("\nFormatted Facebook Marketplace Listing:")
-print(info)
+    # Call the functions and store results
+    title = getTitle()
+    price = getPrice()
+    images = getImage()
+    description = getDescription()
+
+    # Pass the scraped info into Gemini
+    info = formatInformation(title, price, description, images)
+
+    # Print the formatted listing
+    print("\nFormatted Facebook Marketplace Listing:")
+    print(info)
+    print("\n" + "-"*80 + "\n")
