@@ -27,6 +27,9 @@ This project automates the creation of professional product listings for Faceboo
 - Designed for future expansion into a web application.
 
 ---
+## Features to add
+- Automatic captcha solver
+- Connect it to a webapp
 
 ## Local Setup
 
