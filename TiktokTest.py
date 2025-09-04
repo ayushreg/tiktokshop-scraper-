@@ -1,4 +1,7 @@
 from google import genai
+from fastapi import FastAPI
+from typing import List
+from pydantic import BaseModel
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -6,13 +9,28 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import time
 
+
+# Initialize fastAPI
+app = FastAPI()
+
+# Pydantic Models
+# Use to structure the data and convert the json sent
+class ProductLink(BaseModel):
+    url: str
+
+class ProductData(BaseModel):
+    title: str
+    price: str
+    description: str
+    images: List[str]
+
 # Setup Chrome
 service = Service(executable_path='chromedriver.exe')
 driver = webdriver.Chrome(service=service)
 
 # Wait object for explicit waits
 wait = WebDriverWait(driver, 10) # wait up to 10 seconds
-def getImage():
+def get_image():
     images = wait.until(EC.presence_of_all_elements_located(( By.CSS_SELECTOR, "img.object-cover.max-w-full.max-h-full.aspect-square.rounded-4.cursor-pointer" )))
     count = 1
     for img in images:
@@ -20,7 +38,7 @@ def getImage():
         count += 1
     return [img.get_attribute("src") for img in images]
 
-def getDescription():
+def get_description():
     while True:
         try:
             # Wait a short time for a "View more" to appear
@@ -49,7 +67,7 @@ def getDescription():
     print(fullDescription)
     return fullDescription
 
-def getPrice():
+def get_price():
     # Find all elements with the price class
     prices = driver.find_elements(By.CSS_SELECTOR, "span.flex.flex-row.items-baseline")
 
@@ -74,7 +92,7 @@ def getPrice():
     print(fullPrice)
     return fullPrice
 
-def getTitle():
+def get_title():
     classElements = driver.find_elements(By.CSS_SELECTOR, "span.H2-Semibold.text-color-UIText1Display")
     fullTitle = classElements[1].text
     print("\nProduct Title:")
@@ -83,9 +101,9 @@ def getTitle():
 
 # Set up gemini
 
-client = genai.Client(api_key="")
+client = genai.Client(api_key="AIzaSyCUe_dhPi99QWdi18N80xlGirbPlChjOrc")
 
-def formatInformation(title, price, description, images):
+def format_information(title, price, description, images):
     content = f"""
         Rewrite the following product details into a Facebook Marketplace style listing.
         Make it catchy, clear, and ready to post. Keep it short but persuasive.
@@ -104,31 +122,26 @@ def formatInformation(title, price, description, images):
     return response.text.strip()
 
 
-# Main program
+# Our endpoints for our api
 
-# Get multiple product links from the user (comma-separated)
-productLinks = input("Enter product links (separate with commas): ").split(',')
-
-for productLink in productLinks:
-    productLink = productLink.strip()  # Remove extra spaces
-    if not productLink:
-        continue  # Skip empty inputs
-
-    print(f"\nProcessing: {productLink}\n")
-    driver.get(productLink)
-    driver.refresh()  # Reload page to bypass anomalies
+# 1. Scrape raw product data
+@app.post("/scrape/", response_model=ProductData)
+def scrape_product(product: ProductLink):
+    driver.get(product.url)  #product = ProductLink(url="https://example.com/product-page")
+    driver.refresh()
     time.sleep(1)
 
-    # Call the functions and store results
-    title = getTitle()
-    price = getPrice()
-    images = getImage()
-    description = getDescription()
+    title = get_title()
+    price = get_price()
+    images = get_image()
+    description = get_description()
 
-    # Pass the scraped info into Gemini
-    info = formatInformation(title, price, description, images)
+    return ProductData(title=title, price=price, description=description, images=images)
 
-    # Print the formatted listing
-    print("\nFormatted Facebook Marketplace Listing:")
-    print(info)
-    print("\n" + "-"*80 + "\n")
+# 2. Clean up product data using Gemini
+@app.post("/format/")
+def format_product(product: ProductData):
+    cleaned = format_information(product)  #We need to call the scrape functions first
+    return {"formatted_listing": cleaned}
+
+
