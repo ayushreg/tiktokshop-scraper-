@@ -1,4 +1,4 @@
-from google import genai
+from openai import OpenAI
 from fastapi import FastAPI
 from typing import List
 from pydantic import BaseModel
@@ -7,7 +7,11 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import os
+import json
+import re
 import time
+
 
 
 # Initialize fastAPI
@@ -23,6 +27,11 @@ class ProductData(BaseModel):
     price: str
     description: str
     images: List[str]
+
+class ScrapeAndCleanResponse(BaseModel):
+    listing: ProductData
+    script: str
+
 
 # Setup Chrome
 service = Service(executable_path='chromedriver.exe')
@@ -99,49 +108,116 @@ def get_title():
     print(fullTitle)
     return fullTitle
 
-# Set up gemini
+# Setup AI Client (OpenRouter / DeepSeek)
 
-client = genai.Client(api_key="AIzaSyCUe_dhPi99QWdi18N80xlGirbPlChjOrc")
+client = OpenAI(
+    base_url="https://openrouter.ai/api/v1",
+    api_key=os.getenv("OPENROUTER_API_KEY")  # set your key in env
+)
 
-def format_information(title, price, description, images):
-    content = f"""
-        Rewrite the following product details into a Facebook Marketplace style listing.
-        Make it catchy, clear, and ready to post. Keep it short but persuasive.
-        
-        Product Title: {title}
-        Price: {price}
-        Description: {description}
-        Image URLs: {", ".join(images)}
-    """
-    response = client.models.generate_content(
-        model="gemini-2.5-flash",
-        contents=content
+
+def clean_with_ai(title: str, price: str, description: str, images: list[str]):
+    # Construct prompt
+    prompt = f"""
+                Clean and format the following product details into a JSON object ready for a marketplace listing.
+                Return **only valid JSON**. Do not include extra text.
+                
+                Title: {title}
+                Price: {price}
+                Description: {description}
+                Images: {', '.join(images)}
+                
+                Required JSON format:
+                {{
+                    "title": "Product Title",
+                    "price": "$20",
+                    "description": "Catchy, clear description",
+                    "images": ["url1", "url2"]
+                }}
+                """
+
+    # Call AI
+    completion = client.chat.completions.create(
+        model="deepseek/deepseek-chat-v3.1:free",
+        messages=[{"role": "user", "content": prompt}]
     )
 
-    # Return the text output
-    return response.text.strip()
+    completion_text = completion.choices[0].message.content
+
+    # Try to extract JSON using regex
+    match = re.search(r"\{.*\}", completion_text, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group(0))
+        except json.JSONDecodeError:
+            pass
+
+    # Fallback: return original scraped data if AI fails
+    return {
+        "title": title,
+        "price": price,
+        "description": description,
+        "images": images
+    }
+
+# Function used to generate script
+def generate_script(cleaned_listing: dict):
+    # cleaned_listing has "title", "price", "description", "images"
+    # get dictionary value from the cleaned listing
+    prompt = f"""
+    Write a short script for a video or voiceover using the following product info.
+    Make it catchy and engaging.
+
+    Title: {cleaned_listing['title']} 
+    Price: {cleaned_listing['price']}
+    Description: {cleaned_listing['description']}
+    Images: {', '.join(cleaned_listing['images'])}
+    """
+
+    completion = client.chat.completions.create(
+        model="deepseek/deepseek-chat-v3.1:free",
+        messages=[{"role": "user", "content": prompt}]
+    )
+
+    return completion.choices[0].message.content
 
 
-# Our endpoints for our api
 
-# 1. Scrape raw product data
-@app.post("/scrape/", response_model=ProductData)
-def scrape_product(product: ProductLink):
-    driver.get(product.url)  #product = ProductLink(url="https://example.com/product-page")
+
+# Our endpoint for our api
+
+# 1. Scrape raw product data and clean to return a cleaned json
+@app.post("/scrape_and_clean/", response_model=ScrapeAndCleanResponse)
+def scrape_and_clean(product: ProductLink):
+    driver.get(product.url)
     driver.refresh()
     time.sleep(1)
 
+    # Scrape product
     title = get_title()
     price = get_price()
     images = get_image()
     description = get_description()
 
-    return ProductData(title=title, price=price, description=description, images=images)
+    # Call AI to clean & format
+    cleaned = clean_with_ai(title, price, description, images)
 
-# 2. Clean up product data using Gemini
-@app.post("/format/")
-def format_product(product: ProductData):
-    cleaned = format_information(product)  #We need to call the scrape functions first
-    return {"formatted_listing": cleaned}
+    # Generate script
+    script_text = generate_script(cleaned)
 
+    return ScrapeAndCleanResponse(
+        listing=ProductData(
+            title=cleaned.get("title", title),
+            price=cleaned.get("price", price),
+            description=cleaned.get("description", description),
+            images=cleaned.get("images", images)
+        ),
+        script=script_text
+    )
+
+
+# Need this so the fast api server always runs
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
